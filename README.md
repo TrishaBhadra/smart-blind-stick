@@ -160,57 +160,68 @@ architecture.
                             │
                             ▼
                       Audio Warning
+```
 
-                      9. Hardware Architecture
+                     ## 9. Hardware Architecture
 
-The hardware can be divided into four functional layers.
+The hardware is organized into four functional layers:
 
-9.1 Sensing Layer
-HC-SR04 Ultrasonic Sensor
+### 9.1 Sensing Layer
+
+**HC-SR04 Ultrasonic Sensor**
 
 The HC-SR04 generates an ultrasonic pulse and measures the time taken for the reflected signal to return.
 
-This time measurement is used to estimate the distance between the sensor and the detected object.
+This time measurement is used to estimate the distance between the sensor and a detected object.
 
-9.2 Processing Layer
-Arduino Nano
+### 9.2 Processing Layer
 
-The Arduino Nano acts as the main controller.
+**Arduino Nano**
+
+The Arduino Nano acts as the central controller of the system.
 
 Its responsibilities include:
 
-Triggering the ultrasonic sensor
-Measuring the echo duration
-Calculating distance
-Comparing the distance with the detection threshold
-Controlling the buzzer
-Sending distance readings through the serial interface
-9.3 Feedback Layer
-Active Buzzer
+- Triggering the ultrasonic sensor
+- Measuring the echo duration
+- Calculating the distance
+- Comparing the measured distance with the detection threshold
+- Controlling the buzzer
+- Sending distance readings through the serial interface
 
-The active buzzer provides the user with an audible warning when an obstacle is detected within the configured range.
+### 9.3 Feedback Layer
 
-9.4 Power Layer
+**Active Buzzer**
+
+The active buzzer provides an audible warning when an obstacle is detected within the configured detection range.
+
+### 9.4 Power Layer
 
 The prototype uses the following power-related components:
 
-3 × 3.7V lithium-ion batteries
-20A BMS
-Type-C charging module
-5V–12V boost converter
-On/Off switch
-10. Pin Configuration
+- 3 × 3.7V lithium-ion batteries
+- 20A BMS
+- Type-C charging module
+- 5V–12V boost converter
+- On/Off switch
+
+
+## 10. Pin Configuration
 
 The current firmware uses the following Arduino pins:
 
-Component	Arduino Pin	Function
-HC-SR04 Trigger	D9	Sends ultrasonic trigger pulse
-HC-SR04 Echo	D10	Receives reflected pulse
-Active Buzzer	D8	Controls audio alert
-11. Firmware Logic
+| Component | Arduino Pin | Function |
+|---|---:|---|
+| HC-SR04 Trigger | D9 | Sends ultrasonic trigger pulse |
+| HC-SR04 Echo | D10 | Receives reflected pulse |
+| Active Buzzer | D8 | Controls audio alert |
+
+
+## 11. Firmware Logic
 
 The firmware continuously executes the following sequence:
 
+```text
 START
   │
   ▼
@@ -245,39 +256,46 @@ Buzzer ON     Buzzer OFF
         │
         ▼
       Repeat
-Distance Calculation
+```
+11.1 Distance Calculation
 
 The firmware calculates distance using the measured ultrasonic echo duration:
 
 Distance = Echo Duration × 0.0343 / 2
 
-The factor 0.0343 represents the approximate speed of sound in centimeters per microsecond.
+The value 0.0343 represents the approximate speed of sound in centimeters per microsecond.
 
 The division by 2 accounts for the ultrasonic pulse travelling to the obstacle and returning to the sensor.
 
-Alert Logic
+11.2 Obstacle Detection Logic
 
-The current implementation uses the following condition:
+The current implementation uses:
 
-if (distance > 0 && distance < 50)
+if (distance > 0 && distance < 50) {
+    digitalWrite(BUZZER_PIN, HIGH);
+} else {
+    digitalWrite(BUZZER_PIN, LOW);
+}
 
 Therefore:
 
 0 cm < distance < 50 cm
-        ↓
-   Buzzer ON
+          │
+          ▼
+      Buzzer ON
 
 Otherwise:
 
-distance >= 50 cm
-        ↓
-   Buzzer OFF
+distance ≥ 50 cm
+          │
+          ▼
+      Buzzer OFF
 12. Software
-Development Environment
+12.1 Development Environment
 Arduino IDE
-Programming Language
+12.2 Programming Language
 C/C++
-Firmware Responsibilities
+12.3 Firmware Responsibilities
 
 The firmware is responsible for:
 
@@ -294,20 +312,23 @@ Repeating the measurement cycle.
 The current prototype circuit is documented below.
 
 14. Prototype
-Prototype Images
+14.1 Prototype Images
 
 15. Testing & Validation
 
-The primary validation criterion for the current prototype is whether the system correctly changes the buzzer state based on the measured distance.
+The primary validation objective is to verify that the buzzer responds correctly to the measured obstacle distance.
 
-Test Cases
+15.1 Test Cases
 Test ID	Test Condition	Expected Behaviour
 T01	No obstacle within 50 cm	Buzzer OFF
 T02	Obstacle detected below 50 cm	Buzzer ON
 T03	Obstacle remains below 50 cm	Buzzer remains ON
 T04	Obstacle moves beyond 50 cm	Buzzer OFF
 T05	System powered OFF	System inactive
-Serial Monitoring
+
+Actual measured test results should be added after physical validation of the prototype.
+
+15.2 Serial Monitoring
 
 The Arduino outputs the measured distance through the serial interface at:
 
@@ -322,67 +343,77 @@ Distance: 32.14
 
 When the measured distance falls below 50 cm, the buzzer is activated.
 
-Actual test measurements should be added to this section after physical validation of the prototype.
-
 16. Current Limitations
 
-The current prototype is intentionally focused on basic ultrasonic obstacle detection.
+The current prototype focuses on basic ultrasonic obstacle detection and has several limitations.
 
-Sensor Limitations
+16.1 Single-Sensor Detection
 
-The HC-SR04 provides distance information but does not identify the type, shape or importance of an object.
+The current prototype uses a single ultrasonic sensor, limiting the sensing area and directional information available to the system.
 
-Single-Sensor Coverage
+16.2 No Object Classification
 
-The current implementation uses a single ultrasonic sensor, which limits the sensing area and directional information available to the system.
+The HC-SR04 provides distance information but cannot determine the type, shape or identity of the detected object.
 
-Fixed Threshold
+16.3 Fixed Detection Threshold
 
-The alert threshold is currently hard-coded at:
+The alert threshold is currently hard-coded at 50 cm and cannot be dynamically configured by the user.
 
-50 cm
+16.4 No Navigation
 
-It is not dynamically configurable by the user.
+The current prototype does not provide:
 
-No Object Classification
+GPS navigation
+Route planning
+Voice-based navigation
+16.5 No Emergency Communication
 
-The system cannot distinguish between different types of obstacles.
+The system does not currently provide:
 
-No Navigation
+GSM/cellular communication
+Internet-based communication
+Emergency alerts
+16.6 Firmware Timeout Handling
 
-The current system does not provide GPS navigation, route planning or voice guidance.
+The current implementation uses pulseIn() without an explicit timeout.
 
-No Emergency Communication
-
-The prototype does not currently provide GSM, cellular or Internet-based emergency communication.
-
-Firmware Robustness
-
-The current implementation uses pulseIn() without an explicit timeout. A future firmware revision could introduce timeout handling to improve robustness when a valid echo is not received.
+A future firmware revision could introduce timeout handling for situations where a valid ultrasonic echo is not received.
 
 17. Future Scope
 
-Future versions of the system could extend the current architecture with additional sensing, communication and intelligence.
+Future versions of the system could extend the current prototype with additional sensing, navigation, safety and intelligent capabilities.
 
-Environmental Detection
+17.1 Environmental Sensing
+
+Potential additions include:
+
 Water or puddle detection
 Additional proximity sensors
 Ground-level obstacle detection
-Navigation
+17.2 Navigation
+
+Potential additions include:
+
 GPS-based location tracking
 Navigation assistance
 Voice-based directions
-Safety
+17.3 Safety
+
+Potential additions include:
+
 Emergency button
 GSM/cellular emergency alerts
 Configurable emergency contacts
-Power Management
+17.4 Power Management
+
+Potential improvements include:
+
 Battery-level monitoring
 Low-battery warning
 Improved charging and power-management circuitry
-Computer Vision and AI
+17.5 Computer Vision & AI
 
-A future version could incorporate a camera and machine-learning model to identify objects rather than only detecting their distance.
+A future version could incorporate a camera and machine-learning model to identify objects rather than only measuring their distance.
 
 Potential capabilities could include:
 
@@ -408,20 +439,16 @@ Smart-Blind-Stick/
 
 Status: Prototype
 
-Current Core Functionality:
+Current Core Functionality
 
 Ultrasonic obstacle detection with a 50 cm threshold and audible buzzer feedback.
 
-Microcontroller: Arduino Nano
-
-Sensor: HC-SR04
-
-Programming Language: C/C++
-
-Development Environment: Arduino IDE
-
+Category	Current Implementation
+Microcontroller	Arduino Nano
+Ultrasonic Sensor	HC-SR04
+Alert Mechanism	Active Buzzer
+Detection Threshold	50 cm
+Programming Language	C/C++
+Development Environment	Arduino IDE
+Connectivity	None
 20. Contributors
-
-This project was developed as a team-based embedded systems project.
-
-Individual responsibilities should be documented here according to the actual contributions of each team member.
